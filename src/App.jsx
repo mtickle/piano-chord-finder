@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import { useMemo, useState } from 'react';
 
 // --- Constants ---
 
@@ -19,6 +19,15 @@ const SUSPENSIONS = [
   { id: 'sus2', name: 'Sus 2' },
   { id: 'sus4', name: 'Sus 4' },
 ];
+// New: Alterations
+const ALTERATIONS = [
+  { id: 'none', name: 'None' },
+  { id: 'b5', name: 'b5' },
+  { id: 'sharp5', name: '#5' },
+  { id: 'b9', name: 'b9' },
+  { id: 'sharp9', name: '#9' },
+  { id: 'sharp11', name: '#11' },
+];
 
 // --- PianoKeyboard Component ---
 
@@ -28,6 +37,7 @@ const SUSPENSIONS = [
  * @param {Set<number>} props.highlightNotes - A Set of semitone values (e.g., 0, 4, 7) to highlight.
  */
 const PianoKeyboard = ({ highlightNotes }) => {
+  // Hardcoded keys for absolute positioning
   const keys = [
     // Octave 1
     { note: 'C', type: 'white', position: 'left-0', semitone: 0 },
@@ -62,20 +72,18 @@ const PianoKeyboard = ({ highlightNotes }) => {
   const whiteKeys = keys.filter((k) => k.type === 'white');
   const blackKeys = keys.filter((k) => k.type === 'black');
 
-  // Removed flex properties, as text is no longer displayed
   const keyBaseStyles = 'absolute rounded-b-lg border-2 border-gray-700 shadow-md transition-colors duration-150 ease-in-out';
   const whiteKeyStyles = 'w-16 h-64 bg-white text-gray-800 z-0';
   const blackKeyStyles = 'w-10 h-40 bg-gray-900 text-white z-10';
-  // Added '!' to background color to ensure it overrides 'bg-white'
-  const highlightedWhiteKeyStyles = '!bg-red-600 !border-red-600 !shadow-none'; // Solid red for white keys
-  const highlightedBlackKeyStyles = '!bg-red-700 !border-red-700 !shadow-none'; // Solid red for black keys
+
+  // Added !important modifier to bg-color to ensure override
+  const highlightedWhiteKeyStyles = '!bg-red-600 !border-red-600 !shadow-none';
+  const highlightedBlackKeyStyles = '!bg-red-700 !border-red-700 !shadow-none';
 
   return (
-    // Updated width to accommodate two octaves
     <div className="relative w-[60rem] h-64 shadow-xl rounded-lg overflow-hidden">
       {/* Render white keys first */}
       {whiteKeys.map((key) => {
-        // Updated highlight logic to check for absolute semitone value
         const isHighlighted = highlightNotes.has(key.semitone);
         return (
           <div
@@ -89,7 +97,6 @@ const PianoKeyboard = ({ highlightNotes }) => {
 
       {/* Render black keys on top */}
       {blackKeys.map((key) => {
-        // Updated highlight logic to check for absolute semitone value
         const isHighlighted = highlightNotes.has(key.semitone);
         return (
           <div
@@ -106,7 +113,7 @@ const PianoKeyboard = ({ highlightNotes }) => {
 
 // --- Dropdown Component ---
 
-const SelectInput = ({ label, value, onChange, options }) => (
+const SelectInput = ({ label, value, onChange, options, disabled = false }) => (
   <div className="flex flex-col">
     <label htmlFor={label} className="text-sm font-medium text-gray-400 mb-1">
       {label}
@@ -115,7 +122,8 @@ const SelectInput = ({ label, value, onChange, options }) => (
       id={label}
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      className="bg-gray-700 text-white p-3 rounded-lg shadow-md appearance-none focus:outline-none focus:ring-2 focus:ring-red-500"
+      className="bg-gray-700 text-white p-3 rounded-lg shadow-md appearance-none focus:outline-none focus:ring-2 focus:ring-red-500 disabled:opacity-50"
+      disabled={disabled}
     >
       {options.map((opt) => (
         <option key={opt.id} value={opt.id}>
@@ -133,6 +141,7 @@ export default function App() {
   const [quality, setQuality] = useState('major');
   const [extension, setExtension] = useState('none');
   const [suspension, setSuspension] = useState('none');
+  const [alteration, setAlteration] = useState('none'); // New state
 
   /**
    * Calculates the specific semitones for the chord.
@@ -142,40 +151,66 @@ export default function App() {
     const rootIndex = NOTES.indexOf(rootNote);
     if (rootIndex === -1) return new Set();
 
-    const intervals = new Set([0]); // Always include the root
+    // Use a Map to store interval name and semitone value
+    // This makes alterations (like replacing a 5th) easier
+    const intervalMap = new Map();
+    intervalMap.set('root', 0); // Always include the root
+
     const isSus = suspension !== 'none';
 
     // 1. Add 3rd (or suspension)
     if (isSus) {
-      intervals.add(suspension === 'sus2' ? 2 : 5);
+      intervalMap.set('third', suspension === 'sus2' ? 2 : 5);
     } else {
-      intervals.add(quality === 'major' ? 4 : 3);
+      intervalMap.set('third', quality === 'major' ? 4 : 3);
     }
 
     // 2. Add 5th
-    intervals.add(7);
+    intervalMap.set('fifth', 7);
 
     // 3. Add Extensions (stacking)
     if (extension !== 'none') {
-      intervals.add(10); // 7th
+      intervalMap.set('seventh', 10); // 7th
     }
     if (['9', '11', '13'].includes(extension)) {
-      intervals.add(14); // 9th
+      intervalMap.set('ninth', 14); // 9th
     }
-    if (['11', '13'].includes(extension)) { // Corrected typo from '1G' to '13'
-      intervals.add(17); // 11th
+    if (['11', '13'].includes(extension)) {
+      intervalMap.set('eleventh', 17); // 11th
     }
     if (extension === '13') {
-      intervals.add(21); // 13th
+      intervalMap.set('thirteenth', 21); // 13th
+    }
+
+    // 4. Apply Alterations
+    switch (alteration) {
+      case 'b5':
+        intervalMap.set('fifth', 6); // flat 5
+        break;
+      case 'sharp5':
+        intervalMap.set('fifth', 8); // sharp 5
+        break;
+      case 'b9':
+        intervalMap.set('ninth', 13); // flat 9 (replaces 9 if it exists)
+        break;
+      case 'sharp9':
+        intervalMap.set('ninth', 15); // sharp 9 (replaces 9 if it exists)
+        break;
+      case 'sharp11':
+        intervalMap.set('eleventh', 18); // sharp 11 (replaces 11 if it exists)
+        break;
+      default:
+        // No alteration
+        break;
     }
 
     // Map intervals to absolute semitones from the root
-    const absoluteIntervals = Array.from(intervals).map(
+    const absoluteIntervals = Array.from(intervalMap.values()).map(
       (interval) => rootIndex + interval
     );
 
     return new Set(absoluteIntervals);
-  }, [rootNote, quality, extension, suspension]);
+  }, [rootNote, quality, extension, suspension, alteration]); // Added alteration
 
   /**
    * Generates the display string for the note names.
@@ -203,21 +238,27 @@ export default function App() {
 
     if (extension !== 'none') {
       // Special handling for major 7
-      if (quality === 'major' && extension === '7' && suspension === 'none') {
-        // This is a Dominant 7th, so 'C7' is correct.
-        // If we wanted a Major 7th, we'd need another option, e.g., "maj7".
-        // Sticking to user's request.
-        name += extension;
+      if (quality === 'major' && extension === '7' && suspension === 'none' && alteration === 'none') {
+        name += 'maj7';
       } else {
         name += extension;
       }
     }
+
+    // Add alteration
+    if (alteration !== 'none') {
+      if (alteration === 'b5') name += '(b5)';
+      if (alteration === 'sharp5') name += '(#5)';
+      if (alteration === 'b9') name += '(b9)';
+      if (alteration === 'sharp9') name += '(#9)';
+      if (alteration === 'sharp11') name += '(#11)';
+    }
+
     return name;
-  }, [rootNote, quality, extension, suspension]);
+  }, [rootNote, quality, extension, suspension, alteration]); // Added alteration
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-900 text-white p-4 sm:p-8 font-sans">
-      {/* Updated max-w-6xl to fit the wider keyboard */}
       <div className="w-full max-w-6xl bg-gray-800 rounded-2xl shadow-2xl p-6 sm:p-10">
         {/* Header */}
         <h1 className="text-4xl sm:text-5xl font-bold text-center mb-2 text-red-400">
@@ -227,8 +268,8 @@ export default function App() {
           Select a chord to see the notes on the keyboard.
         </p>
 
-        {/* Controls */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-10">
+        {/* Controls - Updated grid to 5 cols on small screens */}
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-4 mb-10">
           <SelectInput
             label="Root Note"
             value={rootNote}
@@ -254,6 +295,13 @@ export default function App() {
             onChange={setExtension}
             options={EXTENSIONS}
           />
+          {/* New Alteration Dropdown */}
+          <SelectInput
+            label="Alteration"
+            value={alteration}
+            onChange={setAlteration}
+            options={ALTERATIONS}
+          />
         </div>
 
         {/* Chord Name Display */}
@@ -262,18 +310,17 @@ export default function App() {
             {chordName}
           </h2>
           <p className="text-xl text-gray-300">
-            {/* Updated to use chordNoteNames */}
             Notes: {chordNoteNames}
           </p>
         </div>
 
         {/* Piano */}
         <div className="flex justify-center overflow-x-auto py-4">
-          {/* Passed chordSemitones to the keyboard */}
           <PianoKeyboard highlightNotes={chordSemitones} />
         </div>
       </div>
     </div>
   );
 }
+
 
