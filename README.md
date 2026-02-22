@@ -1,12 +1,30 @@
-# React + Vite
+# Piano Chord Finder 🎹
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A fast, interactive, and mobile-friendly piano chord visualizer built with React and Tailwind CSS. Designed for musicians, composers, and students who need a quick reference for complex chords during rehearsals or writing sessions.
 
-Currently, two official plugins are available:
+## ✨ Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+* **Interactive Keyboard**: Click any key on the visual piano, and the app intelligently snaps to the most musically logical root note and accidental (e.g., mapping to Eb instead of D#).
+* **Smart Accidental Filtering**: The UI adapts to musical rules. If you select 'C' or 'F' as your root, the 'flat' option is disabled to prevent theoretical headaches like Cb or Fb.
+* **Deep Chord Vocabulary**: Supports a massive variety of chords, going far beyond basic triads:
+  * **Qualities**: Major, Minor
+  * **Suspensions**: sus2, sus4
+  * **Extensions**: 7th, 9th, 11th, 13th
+  * **Alterations**: b5, #5, b9, #9, #11
+* **Mobile-First Design**: Built to be used on the fly. The interface scales perfectly to mobile devices so you can keep it on your music stand right next to your sheet music.
+* **Streamlined "Pro" UI**: Focuses entirely on the controls and the keyboard visualization without unnecessary clutter.
 
-## Expanding the ESLint configuration
+## 🛠 Tech Stack
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+* **React** (Hooks: `useState`, `useMemo`, `useEffect`)
+* **Tailwind CSS** (For rapid, responsive styling)
+* **Vite** (Recommended build tool)
+
+## 🚀 Getting Started
+
+To run this project locally:
+
+1. **Clone the repository:**
+   ```bash
+   git clone [https://github.com/yourusername/piano-chord-finder.git](https://github.com/yourusername/piano-chord-finder.git)
+   cd piano-chord-finder
